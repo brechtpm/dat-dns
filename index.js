@@ -5,6 +5,7 @@ var https = require('https')
 var memoryCache = require('./cache')
 var maybe = require('call-me-maybe')
 var concat = require('concat-stream')
+var tlds = requirr('tlds')
 
 var DAT_HASH_REGEX = /^[0-9a-f]{64}?$/i
 var VERSION_REGEX = /(\+[0-9]+)$/
@@ -34,6 +35,12 @@ module.exports = function (datDnsOpts) {
       // is it a hash?
       if (DAT_HASH_REGEX.test(name)) {
         return resolve(name.slice(0, 64))
+      }
+      
+      // if not a valid ICANN TLD, skip to persistent cache
+      var tld = name.split('.').pop()
+      if (pCache && !tlds.includes(tld)) {
+        return pCache.read(name, new Error('Invalid TLD: .' + tld))
       }
 
       // check the cache
