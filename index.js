@@ -22,8 +22,21 @@ module.exports = function (datDnsOpts) {
       cb = opts
       opts = null
     }
+    var isHash = DAT_HASH_REGEX.test(name)
     var ignoreCache = opts && opts.ignoreCache
     var ignoreCachedMiss = opts && opts.ignoreCachedMiss
+    
+    // if not a hash or valid ICANN TLD, try persistent cache
+    var tld = name.split('.').pop()
+    if (!isHash && !tlds.includes(tld)) {
+      var err = new Error('Invalid TLD: .' + tld)
+      if (pCache) {
+        return pCache.read(name, err)
+      } else {
+        throw err
+      }
+    }
+    
     var promise = new Promise(function (resolve, reject) {
       // parse the name as needed
       var nameParsed = url.parse(name)
@@ -33,15 +46,9 @@ module.exports = function (datDnsOpts) {
       name = name.replace(VERSION_REGEX, '')
 
       // is it a hash?
-      if (DAT_HASH_REGEX.test(name)) {
+      if (isHash) {
         return resolve(name.slice(0, 64))
-      }
-      
-      // if not a valid ICANN TLD, skip to persistent cache
-      var tld = name.split('.').pop()
-      if (pCache && !tlds.includes(tld)) {
-        return pCache.read(name, new Error('Invalid TLD: .' + tld))
-      }
+      }     
 
       // check the cache
       if (!ignoreCache) {
