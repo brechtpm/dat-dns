@@ -5,7 +5,7 @@ var https = require('https')
 var memoryCache = require('./cache')
 var maybe = require('call-me-maybe')
 var concat = require('concat-stream')
-var tlds = requirr('tlds')
+var tlds = require('tlds')
 
 var DAT_HASH_REGEX = /^[0-9a-f]{64}?$/i
 var VERSION_REGEX = /(\+[0-9]+)$/
